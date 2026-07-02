@@ -174,6 +174,52 @@ app.get('/api/school-integration/:userId', async (req, res) => {
 });
 
 
+// 7. Update User Profile (Picture and Identitas)
+app.put('/api/user/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { profile_picture, identitas } = req.body;
+    
+    // Create an object with only defined fields to avoid overwriting with undefined
+    const dataToUpdate = {};
+    if (profile_picture !== undefined) dataToUpdate.profile_picture = profile_picture;
+    if (identitas !== undefined) dataToUpdate.identitas = identitas;
+
+    const user = await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: dataToUpdate
+    });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 8. Dummy School API
+app.get('/api/dummy-school/tasks', (req, res) => {
+  const dummyTasks = [
+    {
+      id: 991,
+      user_id: 1, // Will be ignored by app, app uses local ID
+      judul_tugas: "[VPS] Tugas Jaringan Komputer",
+      deskripsi: "Tugas dummy dari VPS server sekolah",
+      batas_waktu: new Date(Date.now() + 86400000 * 2).toISOString(), // +2 days
+      status_selesai: false,
+      sumber: "sekolah"
+    },
+    {
+      id: 992,
+      user_id: 1,
+      judul_tugas: "[VPS] Makalah Sistem Operasi",
+      deskripsi: "Dikumpulkan minggu depan",
+      batas_waktu: new Date(Date.now() + 86400000 * 7).toISOString(), // +7 days
+      status_selesai: false,
+      sumber: "sekolah"
+    }
+  ];
+  res.json(dummyTasks);
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

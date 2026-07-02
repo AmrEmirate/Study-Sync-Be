@@ -12,6 +12,8 @@ model User {
   nama_lengkap          String
   email                 String   @unique
   password              String?  // Nullable for social login users
+  profile_picture       String?  // Base64 or URL
+  identitas             String?  // JSON string or plain text for identity
   preferensi_notifikasi Boolean  @default(true)
   tasks                 Task[]
   integrations          SchoolIntegration[]
