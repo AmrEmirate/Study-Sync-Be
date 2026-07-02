@@ -274,16 +274,18 @@ app.get('/api/school-integration/:userId', async (req, res) => {
 });
 
 
-// 7. Update User Profile (Picture and Identitas)
+// 7. Update User Profile (Picture, Identitas, Nama Lengkap, Password)
 app.put('/api/user/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { profile_picture, identitas } = req.body;
+    const { profile_picture, identitas, nama_lengkap, password } = req.body;
     
     // Create an object with only defined fields to avoid overwriting with undefined
     const dataToUpdate = {};
     if (profile_picture !== undefined) dataToUpdate.profile_picture = profile_picture;
     if (identitas !== undefined) dataToUpdate.identitas = identitas;
+    if (nama_lengkap !== undefined) dataToUpdate.nama_lengkap = nama_lengkap;
+    if (password !== undefined) dataToUpdate.password = password;
 
     const user = await prisma.user.update({
       where: { id: parseInt(id) },

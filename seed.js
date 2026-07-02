@@ -9,64 +9,85 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("Memulai proses seeding data dummy...");
-
-  // 1. Buat Akun Login Dummy
-  const user = await prisma.user.upsert({
-    where: { email: 'dummy@studysyns.com' },
-    update: {},
-    create: {
-      nama_lengkap: 'Akun Dummy',
-      email: 'dummy@studysyns.com',
-      password: 'password123',
-    },
-  });
-
-  console.log(`Berhasil membuat user dummy: ${user.email} (ID: ${user.id})`);
-
-  // 2. Buat 10 Data Task (Tugas)
-  console.log("Menghapus tugas lama (jika ada) untuk akun ini...");
-  await prisma.task.deleteMany({ where: { user_id: user.id } });
+  const targetEmail = "amremirate03@gmail.com";
+  const targetPassword = "Itawanezila03)";
   
-  console.log("Memasukkan 10 tugas dummy...");
-  const taskData = [];
-  for (let i = 1; i <= 10; i++) {
-    const batasWaktu = new Date();
-    batasWaktu.setDate(batasWaktu.getDate() + (i % 5)); // Bervariasi hingga 5 hari ke depan
+  // 1. Delete all tasks and integrations first due to foreign key constraints
+  await prisma.task.deleteMany({});
+  await prisma.schoolIntegration.deleteMany({});
+  console.log("Deleted all old tasks and integrations.");
 
-    taskData.push({
-      user_id: user.id,
-      judul_tugas: `Tugas Matematika Bab ${i}`,
-      deskripsi: `Mengerjakan latihan soal halaman ${i * 10} sampai ${i * 10 + 5}`,
-      batas_waktu: batasWaktu,
-      status_selesai: i % 3 === 0, // Setiap tugas ke-3 akan berstatus selesai
-      sumber: i % 2 === 0 ? 'sekolah' : 'manual'
+  // 2. Find or create the target user
+  let targetUser = await prisma.user.findUnique({ where: { email: targetEmail } });
+  
+  if (!targetUser) {
+    targetUser = await prisma.user.create({
+      data: {
+        nama_lengkap: "Amr Emirate",
+        email: targetEmail,
+        password: targetPassword,
+        is_verified: true
+      }
+    });
+    console.log("Created target user.");
+  } else {
+    targetUser = await prisma.user.update({
+      where: { email: targetEmail },
+      data: { password: targetPassword, is_verified: true }
+    });
+    console.log("Updated target user.");
+  }
+
+  // 3. Delete all other users
+  const deletedUsers = await prisma.user.deleteMany({
+    where: {
+      email: {
+        not: targetEmail
+      }
+    }
+  });
+  console.log(`Deleted ${deletedUsers.count} other users.`);
+
+  // 4. Create 10 dummy tasks
+  const tasks = [];
+  for (let i = 1; i <= 10; i++) {
+    tasks.push({
+      user_id: targetUser.id,
+      judul_tugas: `Tugas Contoh ${i} - Matematika`,
+      deskripsi: `Selesaikan halaman ${i * 10} dari buku paket.`,
+      batas_waktu: new Date(Date.now() + (86400000 * i)), // i days from now
+      status_selesai: i % 3 === 0, // Every 3rd task is completed
+      sumber: i % 2 === 0 ? "manual" : "sekolah"
     });
   }
-  await prisma.task.createMany({ data: taskData });
+  await prisma.task.createMany({ data: tasks });
+  console.log("Inserted 10 dummy tasks.");
 
-  // 3. Buat 10 Data School Integration (Integrasi Sekolah)
-  console.log("Menghapus integrasi sekolah lama (jika ada) untuk akun ini...");
-  await prisma.schoolIntegration.deleteMany({ where: { user_id: user.id } });
-
-  console.log("Memasukkan 10 integrasi sekolah dummy...");
-  const integrationData = [];
+  // 5. Create 10 dummy integrations
+  const integrations = [];
   for (let i = 1; i <= 10; i++) {
-    integrationData.push({
-      user_id: user.id,
-      endpoint_url: `https://api.sekolah${i}.edu/v1/sync`,
-      auth_token: `token_dummy_sekolah_${i}_abc123`,
+    integrations.push({
+      user_id: targetUser.id,
+      endpoint_url: `https://api.sekolah-contoh-${i}.com/sync`,
+      auth_token: `dummy_token_abc123_${i}`,
       waktu_sinkronisasi_terakhir: new Date()
     });
   }
-  await prisma.schoolIntegration.createMany({ data: integrationData });
+  await prisma.schoolIntegration.createMany({ data: integrations });
+  console.log("Inserted 10 dummy school integrations.");
 
-  console.log("Proses seeding selesai! Data dummy berhasil dimasukkan.");
+  console.log("\n==================================");
+  console.log("Berhasil menyiapkan data akun!");
+  console.log("Email: " + targetEmail);
+  console.log("Password: " + targetPassword);
+  console.log("Total Task: 10");
+  console.log("Total Integrasi API: 10");
+  console.log("==================================");
 }
 
 main()
-  .catch((e) => {
-    console.error("Terjadi error saat seeding:", e);
+  .catch(e => {
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
