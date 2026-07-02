@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                    Int      @id @default(autoincrement())
+  google_id             String?  @unique
+  nama_lengkap          String
+  email                 String   @unique
+  password              String?  // Nullable for social login users
+  preferensi_notifikasi Boolean  @default(true)
+  tasks                 Task[]
+  integrations          SchoolIntegration[]
+}
+
+model Task {
+  id             Int      @id @default(autoincrement())
+  user_id        Int
+  judul_tugas    String
+  deskripsi      String?
+  batas_waktu    DateTime?
+  status_selesai Boolean  @default(false)
+  sumber         String   @default("manual") // "manual" or "sekolah"
+  user           User     @relation(fields: [user_id], references: [id])
+}
+
+model SchoolIntegration {
+  id                       Int      @id @default(autoincrement())
+  user_id                  Int
+  endpoint_url             String
+  auth_token               String
+  waktu_sinkronisasi_terakhir DateTime?
+  user                     User     @relation(fields: [user_id], references: [id])
+}
