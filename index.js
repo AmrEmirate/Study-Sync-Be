@@ -307,6 +307,29 @@ app.post('/api/school-integration', async (req, res) => {
         }
       });
     }
+
+    // SIMULASI OTOMATIS: Tambahkan tugas dummy dari "sekolah" saat integrasi disimpan
+    await prisma.task.createMany({
+      data: [
+        {
+          user_id: parseInt(user_id),
+          judul_tugas: "[Sekolah] " + (Math.random() < 0.5 ? "Matematika Diskrit" : "Kimia Organik"),
+          deskripsi: "Tugas terintegrasi otomatis dari API sekolah.",
+          batas_waktu: new Date(Date.now() + 86400000 * 3), // +3 days
+          sumber: "school_api",
+          status: "BELUM_SELESAI"
+        },
+        {
+          user_id: parseInt(user_id),
+          judul_tugas: "[Sekolah] " + (Math.random() < 0.5 ? "Fisika Dasar" : "Sejarah Dunia"),
+          deskripsi: "Tugas terintegrasi otomatis dari API sekolah.",
+          batas_waktu: new Date(Date.now() + 86400000 * 5), // +5 days
+          sumber: "school_api",
+          status: "BELUM_SELESAI"
+        }
+      ]
+    });
+
     res.json(integration);
   } catch (error) {
     res.status(500).json({ error: error.message });
