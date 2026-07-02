@@ -91,6 +91,58 @@ app.post('/api/auth/verify', async (req, res) => {
   }
 });
 
+// 1.3 Forgot Password
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    let user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit OTP
+
+    await prisma.user.update({
+      where: { email },
+      data: { otp }
+    });
+
+    // Send email
+    try {
+      await transporter.sendMail({
+        from: '"StudySyns App" <no-reply@studysyns.com>',
+        to: email,
+        subject: "StudySyns - Reset Kata Sandi",
+        text: `Halo ${user.nama_lengkap},\n\nKode OTP untuk reset kata sandi Anda adalah: ${otp}\n\nTerima kasih.`,
+      });
+    } catch (mailErr) {
+      console.log("Mail sending skipped/failed:", mailErr.message);
+    }
+
+    res.json({ message: "OTP sent to email" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 1.4 Reset Password
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, otp, new_password } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    if (!user) return res.status(404).json({ error: "User not found" });
+    if (user.otp !== otp) return res.status(400).json({ error: "Invalid OTP" });
+    
+    await prisma.user.update({
+      where: { email },
+      data: { password: new_password, otp: null }
+    });
+    
+    res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 1.5. User Auth / Login (Email/Password & Social)
 app.post('/api/auth/login', async (req, res) => {
   try {
