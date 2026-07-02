@@ -27,7 +27,7 @@ model Task {
   judul_tugas    String
   deskripsi      String?
   batas_waktu    DateTime?
-  status_selesai Boolean  @default(false)
+  status         String   @default("BELUM_SELESAI") // "BELUM_SELESAI", "PROSES", "SELESAI"
   sumber         String   @default("manual") // "manual" or "sekolah"
   user           User     @relation(fields: [user_id], references: [id])
 }

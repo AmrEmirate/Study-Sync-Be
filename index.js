@@ -168,14 +168,15 @@ app.get('/api/tasks/:userId', async (req, res) => {
 // 3. Create Task
 app.post('/api/tasks', async (req, res) => {
   try {
-    const { user_id, judul_tugas, deskripsi, batas_waktu, sumber } = req.body;
+    const { user_id, judul_tugas, deskripsi, batas_waktu, sumber, status } = req.body;
     const task = await prisma.task.create({
       data: {
         user_id,
         judul_tugas,
         deskripsi,
         batas_waktu: batas_waktu ? new Date(batas_waktu) : null,
-        sumber: sumber || 'manual'
+        sumber: sumber || 'manual',
+        status: status || 'BELUM_SELESAI'
       }
     });
     res.json(task);
@@ -188,10 +189,10 @@ app.post('/api/tasks', async (req, res) => {
 app.put('/api/tasks/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
-    const { status_selesai } = req.body;
+    const { status } = req.body;
     const task = await prisma.task.update({
       where: { id: parseInt(id) },
-      data: { status_selesai }
+      data: { status }
     });
     res.json(task);
   } catch (error) {
@@ -203,13 +204,14 @@ app.put('/api/tasks/:id/status', async (req, res) => {
 app.put('/api/tasks/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { judul_tugas, deskripsi, batas_waktu } = req.body;
+    const { judul_tugas, deskripsi, batas_waktu, status } = req.body;
     const task = await prisma.task.update({
       where: { id: parseInt(id) },
       data: { 
         judul_tugas, 
         deskripsi, 
-        batas_waktu: batas_waktu ? new Date(batas_waktu) : null 
+        batas_waktu: batas_waktu ? new Date(batas_waktu) : null,
+        ...(status !== undefined && { status })
       }
     });
     res.json(task);
@@ -306,7 +308,7 @@ app.get('/api/dummy-school/tasks', (req, res) => {
       judul_tugas: "[VPS] Tugas Jaringan Komputer",
       deskripsi: "Tugas dummy dari VPS server sekolah",
       batas_waktu: new Date(Date.now() + 86400000 * 2).toISOString(), // +2 days
-      status_selesai: false,
+      status: "BELUM_SELESAI",
       sumber: "sekolah"
     },
     {
@@ -315,7 +317,7 @@ app.get('/api/dummy-school/tasks', (req, res) => {
       judul_tugas: "[VPS] Makalah Sistem Operasi",
       deskripsi: "Dikumpulkan minggu depan",
       batas_waktu: new Date(Date.now() + 86400000 * 7).toISOString(), // +7 days
-      status_selesai: false,
+      status: "BELUM_SELESAI",
       sumber: "sekolah"
     }
   ];

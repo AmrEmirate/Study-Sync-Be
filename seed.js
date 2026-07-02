@@ -56,7 +56,7 @@ async function main() {
       judul_tugas: `Tugas Contoh ${i} - Matematika`,
       deskripsi: `Selesaikan halaman ${i * 10} dari buku paket.`,
       batas_waktu: new Date(Date.now() + (86400000 * i)), // i days from now
-      status_selesai: i % 3 === 0, // Every 3rd task is completed
+      status: i % 3 === 0 ? "SELESAI" : (i % 3 === 1 ? "PROSES" : "BELUM_SELESAI"),
       sumber: i % 2 === 0 ? "manual" : "sekolah"
     });
   }
